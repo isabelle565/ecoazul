@@ -1,0 +1,348 @@
+/* =========================================
+   VINHETA
+========================================= */
+
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+
+  overflow: hidden;
+
+  /* camada sólida por baixo: o site nunca aparece através */
+  background: var(--intro-background), var(--intro-base);
+  color: var(--intro-text);
+
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s cubic-bezier(0.6, 0, 0.3, 1);
+}
+
+.intro-leaving {
+  opacity: 0;
+  transform: scale(1.04);
+  pointer-events: none;
+}
+
+
+/* =========================================
+   FUNDO
+========================================= */
+
+.intro-background {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.intro-sun {
+  position: absolute;
+  width: 38vw;
+  height: 38vw;
+  max-width: 560px;
+  max-height: 560px;
+  right: 6%;
+  top: -12%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(249, 199, 79, 0.28) 0%,
+    rgba(249, 199, 79, 0.1) 45%,
+    transparent 70%
+  );
+  animation: sun-rise 3s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes sun-rise {
+  from { transform: translateY(40%) scale(0.7); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+/* raios de luz girando bem devagar */
+.intro-rays {
+  position: absolute;
+  width: 160vmax;
+  height: 160vmax;
+  right: calc(6% + 19vw - 80vmax);
+  top: calc(-12% + 19vw - 80vmax);
+  background: repeating-conic-gradient(
+    from 0deg,
+    rgba(255, 248, 231, 0.05) 0deg 6deg,
+    transparent 6deg 18deg
+  );
+  mask-image: radial-gradient(circle, #000 0%, transparent 55%);
+  -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 55%);
+  animation: rays-spin 40s linear infinite;
+}
+
+@keyframes rays-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* montanhas em duas camadas, com deslocamento suave */
+.intro-mountain {
+  position: absolute;
+  bottom: 14%;
+  width: 80%;
+  height: 38%;
+  clip-path: polygon(
+    0 100%, 18% 42%, 33% 66%, 50% 18%, 66% 60%, 82% 30%, 100% 100%
+  );
+}
+
+.intro-mountain-one {
+  left: -12%;
+  background: linear-gradient(rgba(23, 107, 69, 0.28), rgba(23, 107, 69, 0.04));
+  animation: drift-right 6s ease-out both;
+}
+
+.intro-mountain-two {
+  right: -14%;
+  bottom: 12%;
+  height: 30%;
+  background: linear-gradient(rgba(23, 107, 69, 0.4), rgba(23, 107, 69, 0.06));
+  animation: drift-left 6s ease-out both;
+}
+
+@keyframes drift-right {
+  from { transform: translateX(-4%); }
+  to   { transform: translateX(3%); }
+}
+
+@keyframes drift-left {
+  from { transform: translateX(4%); }
+  to   { transform: translateX(-3%); }
+}
+
+/* névoa */
+.intro-mist {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10%;
+  height: 22%;
+  background: linear-gradient(transparent, rgba(255, 248, 231, 0.07), transparent);
+  filter: blur(14px);
+  animation: mist-move 7s ease-in-out infinite alternate;
+}
+
+@keyframes mist-move {
+  from { transform: translateX(-3%); }
+  to   { transform: translateX(3%); }
+}
+
+/* floresta */
+.intro-forest {
+  position: absolute;
+  left: 0;
+  bottom: -5%;
+  width: 100%;
+  height: 26%;
+  background:
+    radial-gradient(ellipse at 15% 100%, #164f36 0%, transparent 50%),
+    radial-gradient(ellipse at 40% 100%, #246d3d 0%, transparent 55%),
+    radial-gradient(ellipse at 65% 100%, #1b5c37 0%, transparent 52%),
+    radial-gradient(ellipse at 90% 100%, #164f36 0%, transparent 50%);
+  opacity: 0.55;
+  animation: forest-up 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes forest-up {
+  from { transform: translateY(30%); opacity: 0; }
+  to   { transform: none; opacity: 0.55; }
+}
+
+
+/* =========================================
+   BANDO DE ARARAS
+========================================= */
+
+.intro-flock {
+  position: absolute;
+  z-index: 3;
+  left: -80px;
+  fill: var(--intro-text);
+  opacity: 0;
+  animation:
+    fly-across 4.2s linear forwards,
+    flap 0.45s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+
+.flock-1 { top: 22%; width: 54px; animation-delay: 0.1s, 0.1s; }
+.flock-2 { top: 30%; width: 38px; animation-delay: 0.5s, 0.3s; }
+.flock-3 { top: 16%; width: 30px; animation-delay: 0.9s, 0.2s; }
+
+@keyframes fly-across {
+  0%   { left: -80px; opacity: 0; }
+  10%  { opacity: 0.7; }
+  90%  { opacity: 0.7; }
+  100% { left: calc(100vw + 80px); opacity: 0; }
+}
+
+@keyframes flap {
+  from { scale: 1 1; }
+  to   { scale: 1 0.35; }
+}
+
+
+/* =========================================
+   PALCO: LOGO E FRASE
+========================================= */
+
+.intro-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+}
+
+.intro-glow {
+  position: absolute;
+  width: min(70vw, 760px);
+  height: min(36vw, 380px);
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse,
+    rgba(255, 248, 231, 0.3) 0%,
+    rgba(255, 248, 231, 0) 70%
+  );
+  animation: glow-in 1.6s ease-out 0.2s both;
+}
+
+@keyframes glow-in {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.intro-logo {
+  position: relative;
+  width: min(72vw, 820px);
+  height: auto;
+
+  filter: drop-shadow(0 0 40px rgba(255, 248, 231, 0.25));
+
+  animation: logo-reveal 1.4s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s both;
+}
+
+@keyframes logo-reveal {
+  from {
+    opacity: 0;
+    filter: blur(18px) drop-shadow(0 0 40px rgba(255, 248, 231, 0.25));
+    transform: translateY(30px) scale(0.88);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0) drop-shadow(0 0 40px rgba(255, 248, 231, 0.25));
+    transform: none;
+  }
+}
+
+.intro-tagline {
+  position: relative;
+  margin: 0;
+  font-size: clamp(13px, 1.8vw, 20px);
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  text-align: center;
+  padding: 0 20px;
+  animation: tagline-in 1s ease-out 1.6s both;
+}
+
+@keyframes tagline-in {
+  from { opacity: 0; letter-spacing: 0.6em; transform: translateY(10px); }
+  to   { opacity: 0.85; letter-spacing: 0.32em; transform: none; }
+}
+
+
+/* =========================================
+   BOTÃO PULAR
+========================================= */
+
+.skip-intro {
+  position: absolute;
+  z-index: 20;
+  top: 30px;
+  right: 30px;
+
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 11px 17px;
+  border: 1px solid var(--skip-border);
+  border-radius: 999px;
+  background: var(--skip-background);
+  color: var(--intro-text);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  backdrop-filter: blur(12px);
+  transition: transform 0.25s ease, background 0.25s ease;
+}
+
+.skip-intro:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.skip-arrow {
+  font-size: 18px;
+  transition: transform 0.25s ease;
+}
+
+.skip-intro:hover .skip-arrow {
+  transform: translateX(4px);
+}
+
+
+/* =========================================
+   BARRA DE PROGRESSO
+========================================= */
+
+.intro-progress {
+  position: absolute;
+  z-index: 20;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(300px, 50vw);
+  height: 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--progress-background);
+}
+
+.intro-progress-bar {
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--yellow), var(--forest));
+  animation: intro-progress 4.2s linear forwards;
+}
+
+@keyframes intro-progress {
+  to { width: 100%; }
+}
+
+
+/* =========================================
+   MOVIMENTO REDUZIDO
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .intro *,
+  .intro-flock {
+    animation-duration: 0.01s !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+  }
+  .intro-flock { display: none; }
+}

@@ -1,0 +1,56 @@
+export const pacotes = [
+  {
+    id: 'pantanal-sul',
+    tipo: 'viagem',
+    cena: 'sul',
+    selo: 'Mais acessível',
+    nome: 'Pantanal Sul',
+    local: 'Bonito, Miranda e Campo Grande (MS)',
+    duracao: '3 dias / 2 noites',
+    precoMin: 4500,
+    precoMax: 6000,
+    foco: 'Biodiversidade acessível, ninhos naturais e centros de preservação.',
+    atracoes: [
+      'Buraco das Araras, dolina gigante em Bonito',
+      'Trilhas de observação em Miranda e Campo Grande, em parceria com o Instituto Arara Azul',
+    ],
+    publico: 'Turistas nacionais e internacionais de classe média-alta',
+    inclui: ['Pousada de ecoturismo', 'Traslados', 'Guias especializados', 'Entradas'],
+  },
+  {
+    id: 'perigara',
+    tipo: 'viagem',
+    cena: 'perigara',
+    selo: 'Expedição exclusiva',
+    nome: 'Fazenda São Francisco do Perigara',
+    local: 'Barão de Melgaço, Pantanal (MT)',
+    duracao: '5 dias / 4 noites',
+    precoMin: 12000,
+    precoMax: 18000,
+    foco: 'Imersão profunda e fotografia de alta performance onde vive a maior concentração de araras-azuis do mundo.',
+    atracoes: [
+      'Abriga cerca de 15% de toda a população da espécie',
+      'Torres de observação e áreas preservadas restritas',
+    ],
+    publico: 'Fotógrafos de natureza, ornitólogos e turistas estrangeiros de luxo',
+    inclui: ['Glamping de luxo', 'Mentorias de fotografia', 'Acesso restrito'],
+  },
+  {
+    id: 'ninho',
+    tipo: 'ninho',
+    cena: 'ninho',
+    selo: 'Sem viajar',
+    nome: 'Adote um Ninho',
+    local: 'Ninhos monitorados na natureza',
+    duracao: 'Apadrinhamento por 1 ano',
+    precoMin: 300,
+    precoMax: 1000,
+    foco: 'Torne-se padrinho de um ninho de arara-azul monitorado e receba um certificado digital.',
+    atracoes: ['Certificado digital de padrinho'],
+    publico: 'Quem quer ajudar a espécie sem precisar viajar',
+    inclui: ['Certificado digital'],
+  },
+]
+
+export const reais = (n) =>
+  n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })

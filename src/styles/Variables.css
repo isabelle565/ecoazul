@@ -1,0 +1,45 @@
+:root {
+  /* ================================
+     PALETA ECOAZUL
+  ================================= */
+
+  --forest: #176b45;
+  --forest-dark: #0f4a30;
+  --cream: #fff8e7;
+  --macaw: #0077b6;
+  --macaw-dark: #005a8c;
+  --yellow: #f9c74f;
+  --red: #d62828;
+  --red-dark: #b01f1f;
+
+  --ink: #14291f;
+  --ink-soft: #4b5f54;
+  --line: rgba(20, 41, 31, 0.14);
+  --white: #ffffff;
+
+  --shadow: 0 10px 30px rgba(15, 74, 48, 0.14);
+
+  /* nomes usados pela vinheta */
+  --blue-primary: var(--macaw);
+  --blue-light: #2aa5dc;
+  --green-primary: var(--forest);
+
+  /* ================================
+     VINHETA
+  ================================= */
+
+  --intro-background:
+    radial-gradient(
+      circle at 50% 45%,
+      #101a15 0%,
+      #070b09 55%,
+      #000000 100%
+    );
+
+  --intro-base: #000000;
+  --intro-text: #fff8e7;
+
+  --skip-background: rgba(255, 255, 255, 0.08);
+  --skip-border: rgba(255, 248, 231, 0.25);
+  --progress-background: rgba(255, 248, 231, 0.18);
+}
