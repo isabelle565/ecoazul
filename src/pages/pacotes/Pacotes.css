@@ -1,0 +1,9 @@
+/* Estilos só da página Pacotes. Cores sempre com var(--...) para funcionar nos dois temas. */
+.pagina-pacotes .pacote-preco {
+  margin-top: auto;
+  color: var(--accent);
+  font-size: 20px;
+}
+.pagina-pacotes .offer-badge {
+  align-self: flex-start;
+}

@@ -1,0 +1,14 @@
+/* Estilos só da página Sobre. */
+.pagina-sobre .sobre-bloco {
+  padding: clamp(24px, 4vw, 44px);
+  border-radius: 22px;
+}
+.pagina-sobre .sobre-bloco h2 {
+  font-size: clamp(26px, 3.4vw, 40px);
+}
+.pagina-sobre .sobre-bloco p {
+  max-width: 64ch;
+  margin-top: 14px;
+  color: var(--muted);
+  font-size: 18px;
+}

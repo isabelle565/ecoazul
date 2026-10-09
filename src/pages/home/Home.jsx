@@ -1,50 +1,26 @@
-
-// Importa o hook useState do React.
-// Ele permite criar e controlar estados dentro do componente.
-import { useState } from 'react'
-
-// Importa os estilos específicos da página Home.
+import { useEffect, useRef, useState } from 'react'
 import './Home.css'
 
-// Importa a imagem da logo EcoAzul.
-import logoEcoAzul from '../../assets/logo-ecoazul.png'
-
-// Importa os dados dos pacotes e uma função responsável por
-// formatar os valores para o formato de moeda brasileira.
 import { pacotes, reais } from '../../data/Pacotes.js'
-
-// Importa o componente visual usado para representar a cena
-// de cada pacote.
-import Scene from '../home/Scene.jsx'
-
-// Importa o componente responsável pela janela de reserva.
-import ReserveDialog from '../home/ReserveDialog.jsx'
-
+import Reveal from '../../components/Reveal.jsx'
+import HeroCanvas from '../../components/HeroCanvas.jsx'
+import ReserveDialog from './ReserveDialog.jsx'
 
 // ============================================================
-// BENEFÍCIOS
+// DADOS ESTÁTICOS DA PÁGINA
 // ============================================================
 
-// Array contendo os benefícios apresentados na página.
-// Cada objeto representa um benefício diferente.
 const beneficios = [
   {
-    // Título que será mostrado para o usuário.
     titulo: 'Guias especializados',
-
-    // Texto explicativo do benefício.
     texto: 'Acompanhamento de quem conhece as araras e os ninhos de perto.',
-
-    // Caminho SVG usado como ícone.
     icone: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4 0-7 2-7 5v1h14v-1c0-3-3-5-7-5Z',
   },
-
   {
     titulo: 'Hospedagem de ecoturismo',
     texto: 'Pousadas e glamping dentro do Pantanal, com traslados e entradas.',
     icone: 'M3 20V9l9-6 9 6v11h-6v-6H9v6H3Z',
   },
-
   {
     titulo: 'Apadrinhe um ninho',
     texto: 'Ajude a proteger a espécie mesmo sem viajar, a partir de R$ 300 por ano.',
@@ -52,204 +28,278 @@ const beneficios = [
   },
 ]
 
+const estatisticas = [
+  { valor: 15, sufixo: '%', rotulo: 'da população da espécie vive no Perigara' },
+  { valor: 3, sufixo: '', rotulo: 'experiências para viver ou apoiar' },
+  { valor: 300, prefixo: 'R$ ', rotulo: 'por ano para apadrinhar um ninho' },
+  { valor: 5, sufixo: ' dias', rotulo: 'de imersão na expedição mais longa' },
+]
+
+const abasArara = [
+  {
+    id: 'habitat',
+    rotulo: 'Habitat',
+    titulo: 'Pantanal, Cerrado e Amazônia',
+    texto:
+      'A arara-azul-grande vive em regiões abertas do Brasil central. No Pantanal ela nidifica principalmente em cavidades de árvores antigas, como o manduvi.',
+  },
+  {
+    id: 'dieta',
+    rotulo: 'Dieta',
+    titulo: 'Especialista em palmeiras',
+    texto:
+      'Seu bico poderoso abre os cocos duros de palmeiras como o acuri e a bocaiúva, base da alimentação da espécie.',
+  },
+  {
+    id: 'ameacas',
+    rotulo: 'Ameaças',
+    titulo: 'Tráfico e perda de habitat',
+    texto:
+      'A captura para o comércio ilegal e a perda de árvores com ninhos levaram a espécie perto da extinção. O monitoramento de ninhos ajudou na recuperação.',
+  },
+  {
+    id: 'ajuda',
+    rotulo: 'Como ajudar',
+    titulo: 'Turismo responsável e padrinhos',
+    texto:
+      'Visitar com guias especializados e apadrinhar ninhos gera renda local e financia o acompanhamento das famílias de araras.',
+  },
+]
+
+const faq = [
+  {
+    p: 'Preciso de experiência para participar das expedições?',
+    r: 'Não. Os guias acompanham o grupo o tempo todo. As trilhas do Pantanal Sul são leves e a expedição do Perigara é feita em ritmo de observação e fotografia.',
+  },
+  {
+    p: 'O que está incluso nos pacotes?',
+    r: 'Hospedagem, traslados, guias especializados e entradas. No Perigara há ainda glamping de luxo, mentorias de fotografia e acesso a áreas restritas.',
+  },
+  {
+    p: 'Como funciona a adoção de um ninho?',
+    r: 'Você escolhe o valor anual, apadrinha um ninho monitorado por 1 ano e recebe um certificado digital de padrinho.',
+  },
+  {
+    p: 'Os preços são reais?',
+    r: 'Este é um projeto escolar: preços e pacotes são ilustrativos e nenhuma reserva é cobrada.',
+  },
+]
 
 // ============================================================
-// COMPONENTE HOME
+// PEQUENOS HOOKS / COMPONENTES DE INTERAÇÃO
 // ============================================================
 
-// Componente principal da página inicial.
-function Home() {
+// Número que "sobe" até o valor final quando aparece na tela
+function Contador({ valor, prefixo = '', sufixo = '' }) {
+  const ref = useRef(null)
+  const [n, setN] = useState(0)
 
-  // Estado que controla qual aba da busca está selecionada.
-  // Pode ser "pacotes" ou "ninho".
-  const [aba, setAba] = useState('pacotes')
-
-  // Estado que guarda o destino escolhido pelo usuário.
-  // Inicialmente mostra todos os destinos.
-  const [destino, setDestino] = useState('todos')
-
-  // Estado responsável por controlar qual filtro de pacotes
-  // está sendo aplicado.
-  const [filtro, setFiltro] = useState('todos')
-
-  // Estado que guarda o pacote selecionado para reserva.
-  // Quando é null, nenhum pacote está selecionado.
-  const [reserva, setReserva] = useState(null)
-
-
-  // ==========================================================
-  // FUNÇÃO DE BUSCA
-  // ==========================================================
-
-  // Executada quando o formulário de busca é enviado.
-  const buscar = (e) => {
-
-    // Impede o comportamento padrão do formulário,
-    // que seria recarregar a página.
-    e.preventDefault()
-
-    // Se a aba atual for "pacotes", utiliza o destino escolhido.
-    // Caso contrário, define o filtro como "ninho".
-    setFiltro(aba === 'pacotes' ? destino : 'ninho')
-
-    // Depois da busca, rola a página automaticamente
-    // até a seção de pacotes.
-    document.getElementById('pacotes').scrollIntoView({
-      behavior: 'smooth',
+  useEffect(() => {
+    const el = ref.current
+    const reduz = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    let raf = 0
+    const obs = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return
+      obs.disconnect()
+      if (reduz) return setN(valor)
+      const ini = performance.now()
+      const dur = 1400
+      const passo = (t) => {
+        const k = Math.min((t - ini) / dur, 1)
+        setN(Math.round(valor * (1 - Math.pow(1 - k, 3))))
+        if (k < 1) raf = requestAnimationFrame(passo)
+      }
+      raf = requestAnimationFrame(passo)
     })
-  }
-
-
-  // ==========================================================
-  // FILTRAGEM DOS PACOTES
-  // ==========================================================
-
-  // Cria uma nova lista contendo somente os pacotes
-  // que devem aparecer na tela.
-  const visiveis = pacotes.filter(
-    (p) =>
-      // Mostra todos quando o filtro é "todos".
-      filtro === 'todos' ||
-
-      // Ou mostra o pacote cujo ID corresponde ao filtro.
-      p.id === filtro ||
-
-      // Ou mostra pacotes do tipo "ninho" quando necessário.
-      (filtro !== 'ninho' && p.tipo === 'ninho'),
-  )
-
-
-  // ==========================================================
-  // INTERFACE DA PÁGINA
-  // ==========================================================
+    obs.observe(el)
+    return () => {
+      obs.disconnect()
+      cancelAnimationFrame(raf)
+    }
+  }, [valor])
 
   return (
-    <main className="home">
+    <span ref={ref}>
+      {prefixo}
+      {n}
+      {sufixo}
+    </span>
+  )
+}
 
-      {/* ======================================================
-          BARRA SUPERIOR
-          ====================================================== */}
+// Faz o brilho seguir o mouse dentro de cards (usa variáveis CSS)
+const seguirMouse = (e) => {
+  const r = e.currentTarget.getBoundingClientRect()
+  e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`)
+  e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`)
+}
 
-      {/* Pequena barra informativa no topo do site. */}
-      <div className="topbar">
+// Gera um código "de ninho" a partir do nome (só para o certificado)
+const codigoNinho = (nome) => {
+  let h = 0
+  for (const c of nome || 'arara') h = (h * 31 + c.charCodeAt(0)) % 9000
+  return `NINHO-${String(h + 1000).padStart(4, '0')}`
+}
 
-        {/* Informação principal da barra. */}
-        <span>Observação da arara-azul no Pantanal</span>
+// ============================================================
+// HOME
+// ============================================================
 
-        {/* Link que leva o usuário até a seção de adoção. */}
-        <a href="#ninho">
-          Adote um ninho a partir de R$ 300 por ano
-        </a>
-      </div>
+function Home() {
+  const [aba, setAba] = useState('pacotes')
+  const [destino, setDestino] = useState('todos')
+  const [filtro, setFiltro] = useState('todos')
+  const [reserva, setReserva] = useState(null)
 
+  // viajantes escolhidos em cada card
+  const [viajantes, setViajantes] = useState({ 'pantanal-sul': 2, perigara: 2 })
 
-      {/* ======================================================
-          CABEÇALHO / NAVBAR
-          ====================================================== */}
+  // mapa
+  const [pinoAtivo, setPinoAtivo] = useState('perigara')
 
-      <header className="header">
+  // aba "A arara"
+  const [abaArara, setAbaArara] = useState('habitat')
 
-        {/* Logo clicável.
-            Ao clicar, o usuário volta para o início da página. */}
-        <a href="#inicio" className="header-logo">
-          <img src={logoEcoAzul} alt="EcoAzul" />
-        </a>
+  // adoção
+  const [valorNinho, setValorNinho] = useState(500)
+  const [nomePadrinho, setNomePadrinho] = useState('')
 
+  // FAQ
+  const [faqAberta, setFaqAberta] = useState(0)
 
-        {/* Menu de navegação principal. */}
-        <nav className="header-nav" aria-label="Principal">
+  // inclinação 3D do cartão do hero
+  const fichaRef = useRef(null)
 
-          {/* Link para os pacotes. */}
-          <a href="#pacotes">Pacotes</a>
+  const irPara = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+  }
 
-          {/* Link para adoção de ninho. */}
-          <a href="#ninho">Adote um ninho</a>
+  const buscar = (e) => {
+    e.preventDefault()
+    setFiltro(aba === 'pacotes' ? destino : 'ninho')
+    irPara('pacotes')
+  }
 
-          {/* Link para a seção sobre a EcoAzul. */}
-          <a href="#sobre">Sobre</a>
-        </nav>
+  const visiveis = pacotes.filter(
+    (p) => filtro === 'todos' || p.id === filtro || (filtro !== 'ninho' && p.tipo === 'ninho'),
+  )
 
+  const chips = [
+    { id: 'todos', rotulo: 'Todos' },
+    { id: 'pantanal-sul', rotulo: 'Pantanal Sul' },
+    { id: 'perigara', rotulo: 'Perigara' },
+    { id: 'ninho', rotulo: 'Adote um ninho' },
+  ]
 
-        {/* Botão que leva diretamente para os pacotes. */}
-        <a href="#pacotes" className="btn btn-red btn-small">
-          Ver pacotes
-        </a>
-      </header>
+  const ajustarViajantes = (id, delta) =>
+    setViajantes((v) => ({ ...v, [id]: Math.min(12, Math.max(1, (v[id] ?? 2) + delta)) }))
 
+  const inclinar = (e) => {
+    const el = fichaRef.current
+    const r = el.getBoundingClientRect()
+    const x = (e.clientX - r.left) / r.width - 0.5
+    const y = (e.clientY - r.top) / r.height - 0.5
+    el.style.setProperty('--rx', `${(-y * 10).toFixed(2)}deg`)
+    el.style.setProperty('--ry', `${(x * 12).toFixed(2)}deg`)
+  }
+  const soltar = () => {
+    fichaRef.current.style.setProperty('--rx', '0deg')
+    fichaRef.current.style.setProperty('--ry', '0deg')
+  }
 
-      {/* ======================================================
-          HERO
-          ====================================================== */}
+  const pino = pacotes.find((p) => p.id === pinoAtivo)
+  const ninhoPacote = pacotes.find((p) => p.tipo === 'ninho')
+  const nivelPadrinho = valorNinho >= 800 ? 'Protetor' : valorNinho >= 500 ? 'Guardião' : 'Padrinho'
 
-      {/* Primeira seção principal da página. */}
-      <section className="hero" id="inicio">
-
-        <div className="hero-inner">
-
-          {/* Textos principais do site. */}
-          <div className="hero-text">
-
-            {/* Título principal. */}
-            <h1>Veja a arara-azul de perto, no Pantanal.</h1>
-
-            {/* Texto de apresentação. */}
-            <p>
-              Pacotes de ecoturismo e expedições fotográficas, com guias
-              especializados e hospedagem na natureza.
-            </p>
-          </div>
-
-
-          {/* Logo/imagem exibida na área principal. */}
-          <img
-            className="hero-bird"
-            src={logoEcoAzul}
-            alt="EcoAzul"
-          />
+  return (
+    <main className="home" id="inicio">
+      {/* ---------- hero ---------- */}
+      <section className="hero">
+        <div className="hero-bg" aria-hidden="true">
+          <div className="hero-orb hero-orb-1" />
+          <div className="hero-orb hero-orb-2" />
+          <div className="hero-grid" />
+          <HeroCanvas />
         </div>
 
+        <div className="hero-inner">
+          <div className="hero-text">
+            <span className="tag">
+              <i className="tag-pulse" /> Pantanal · Observação de arara-azul
+            </span>
+            <h1>
+              Veja a <em>arara-azul</em> de perto, no Pantanal.
+            </h1>
+            <p>
+              Pacotes de ecoturismo e expedições fotográficas, com guias especializados e
+              hospedagem na natureza. Ou apadrinhe um ninho sem sair de casa.
+            </p>
+            <div className="hero-cta">
+              <a href="#pacotes" className="btn btn-primary">
+                Explorar pacotes
+              </a>
+              <a href="#ninho" className="btn btn-ghost">
+                Adotar um ninho
+              </a>
+            </div>
+          </div>
 
-        {/* SVG usado para criar o efeito de paisagem/morros
-            na parte inferior do Hero. */}
-        <svg
-          className="hero-hills"
-          viewBox="0 0 1440 120"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
+          {/* ficha técnica com inclinação 3D */}
+          <div
+            className="ficha-wrap"
+            onPointerMove={inclinar}
+            onPointerLeave={soltar}
+          >
+            <article className="ficha" ref={fichaRef}>
+              <header className="ficha-head">
+                <span className="mono">FICHA · 001</span>
+                <span className="ficha-status">
+                  <i /> Vulnerável (IUCN)
+                </span>
+              </header>
+              <h2>Arara-azul-grande</h2>
+              <p className="mono ficha-sci">Anodorhynchus hyacinthinus</p>
 
-          {/* Primeira camada da paisagem. */}
-          <path
-            d="M0 70 Q240 20 480 60 T960 50 T1440 40 V120 H0Z"
-            fill="#9fd0b0"
-            opacity=".7"
-          />
+              <div className="ficha-bird" aria-hidden="true">
+                <svg viewBox="0 0 120 120">
+                  <defs>
+                    <linearGradient id="gArara" x1="0" x2="1" y1="0" y2="1">
+                      <stop offset="0" stopColor="var(--accent-2)" />
+                      <stop offset="1" stopColor="var(--accent-3)" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    fill="url(#gArara)"
+                    d="M92 14c-18-4-36 6-44 22-6 12-4 24-14 36-6 8-16 10-22 10 10 6 24 6 36-2 6 10 18 14 28 8 12-8 16-26 12-42 4-2 8-6 10-12-4 0-8-2-10-6 2-4 2-10 4-14Z"
+                  />
+                  <circle cx="82" cy="30" r="3" fill="var(--bg)" />
+                  <path d="M96 24c8 2 10 8 6 14-2-6-6-10-6-14Z" fill="#ffd54a" />
+                </svg>
+              </div>
 
-          {/* Segunda camada da paisagem. */}
-          <path
-            d="M0 95 Q300 55 600 90 T1200 80 T1440 85 V120 H0Z"
-            fill="#fff8e7"
-          />
-        </svg>
+              <dl className="ficha-dados">
+                <div>
+                  <dt>Comprimento</dt>
+                  <dd>~ 100 cm</dd>
+                </div>
+                <div>
+                  <dt>Envergadura</dt>
+                  <dd>~ 120 cm</dd>
+                </div>
+                <div>
+                  <dt>Maior papagaio</dt>
+                  <dd>do mundo</dd>
+                </div>
+              </dl>
+            </article>
+          </div>
+        </div>
       </section>
 
-
-      {/* ======================================================
-          FORMULÁRIO DE BUSCA
-          ====================================================== */}
-
+      {/* ---------- busca ---------- */}
       <div className="search-wrap">
-
-        {/* Formulário responsável pela pesquisa. */}
         <form className="search" onSubmit={buscar}>
-
-          {/* Abas que permitem escolher entre:
-              Pacotes de viagem
-              ou
-              Adote um ninho */}
           <div className="search-tabs" role="tablist">
-
-            {/* Aba de pacotes. */}
             <button
               type="button"
               role="tab"
@@ -258,9 +308,6 @@ function Home() {
             >
               Pacotes de viagem
             </button>
-
-
-            {/* Aba de adoção. */}
             <button
               type="button"
               role="tab"
@@ -271,436 +318,449 @@ function Home() {
             </button>
           </div>
 
-
-          {/* ==================================================
-              CAMPOS DA BUSCA
-              ================================================== */}
-
           <div className="search-fields">
-
-            {/* Operador ternário:
-                se a aba for "pacotes", mostra os campos de viagem.
-                caso contrário, mostra os campos de adoção. */}
-
             {aba === 'pacotes' ? (
-
               <>
-
-                {/* Campo de seleção do destino. */}
                 <label className="field field-wide">
                   Destino
-
-                  <select
-                    value={destino}
-                    onChange={(e) => setDestino(e.target.value)}
-                  >
-                    <option value="todos">
-                      Todos os destinos
-                    </option>
-
-                    <option value="pantanal-sul">
-                      Pantanal Sul (MS)
-                    </option>
-
-                    <option value="perigara">
-                      Fazenda Perigara (MT)
-                    </option>
+                  <select value={destino} onChange={(e) => setDestino(e.target.value)}>
+                    <option value="todos">Todos os destinos</option>
+                    <option value="pantanal-sul">Pantanal Sul (MS)</option>
+                    <option value="perigara">Fazenda Perigara (MT)</option>
                   </select>
                 </label>
-
-
-                {/* Campo para escolher a data da viagem. */}
                 <label className="field">
                   Data de ida
                   <input type="date" />
                 </label>
-
-
-                {/* Campo para quantidade de viajantes. */}
                 <label className="field">
                   Viajantes
-
-                  <input
-                    type="number"
-                    min="1"
-                    max="12"
-                    defaultValue="2"
-                  />
+                  <input type="number" min="1" max="12" defaultValue="2" />
                 </label>
-
-
-                {/* Botão que envia o formulário. */}
-                <button type="submit" className="btn btn-red">
+                <button type="submit" className="btn btn-primary">
                   Buscar pacotes
                 </button>
-
               </>
-
             ) : (
-
               <>
-
-                {/* Texto explicativo do programa de adoção. */}
                 <p className="search-note">
-                  Escolha o valor do apadrinhamento e receba um certificado digital
-                  do seu ninho.
+                  Escolha o valor do apadrinhamento e receba um certificado digital do seu ninho.
                 </p>
-
-
-                {/* Campo para selecionar o valor anual. */}
                 <label className="field">
                   Valor por ano
-
                   <select defaultValue="500">
                     <option value="300">R$ 300</option>
                     <option value="500">R$ 500</option>
                     <option value="1000">R$ 1.000</option>
                   </select>
                 </label>
-
-
-                {/* Botão para acessar o programa. */}
-                <button type="submit" className="btn btn-red">
+                <button type="submit" className="btn btn-primary">
                   Ver programa
                 </button>
-
               </>
-
             )}
           </div>
         </form>
       </div>
 
-
-      {/* ======================================================
-          BENEFÍCIOS
-          ====================================================== */}
-
-      <section className="benefits">
-
-        {/* Percorre o array "beneficios" e cria um elemento
-            para cada benefício. */}
-        {beneficios.map((b) => (
-
-          <div className="benefit" key={b.titulo}>
-
-            {/* Ícone SVG do benefício. */}
-            <svg
-              viewBox="0 0 24 24"
-              aria-hidden="true"
-            >
-              <path d={b.icone} />
-            </svg>
-
-
-            {/* Conteúdo textual do benefício. */}
-            <div>
-
-              {/* Título do benefício. */}
-              <h3>{b.titulo}</h3>
-
-              {/* Descrição do benefício. */}
-              <p>{b.texto}</p>
-            </div>
-          </div>
+      {/* ---------- números ---------- */}
+      <section className="stats" aria-label="EcoAzul em números">
+        {estatisticas.map((s, i) => (
+          <Reveal className="stat" key={s.rotulo} delay={i * 80}>
+            <strong>
+              <Contador valor={s.valor} prefixo={s.prefixo} sufixo={s.sufixo} />
+            </strong>
+            <span>{s.rotulo}</span>
+          </Reveal>
         ))}
       </section>
 
+      {/* ---------- benefícios ---------- */}
+      <section className="benefits">
+        {beneficios.map((b, i) => (
+          <Reveal className="benefit glow-card" key={b.titulo} delay={i * 90} onPointerMove={seguirMouse}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d={b.icone} />
+            </svg>
+            <div>
+              <h3>{b.titulo}</h3>
+              <p>{b.texto}</p>
+            </div>
+          </Reveal>
+        ))}
+      </section>
 
-      {/* ======================================================
-          PACOTES
-          ====================================================== */}
-
+      {/* ---------- pacotes ---------- */}
       <section className="section" id="pacotes">
-
-        {/* Cabeçalho da seção. */}
-        <div className="section-head">
-
+        <Reveal className="section-head">
+          <span className="eyebrow mono">01 / Pacotes</span>
           <h2>Pacotes para ver a arara-azul</h2>
+          <p>Valores por pessoa. Ajuste o número de viajantes e veja a estimativa na hora.</p>
+        </Reveal>
 
-          <p>
-            Valores por pessoa.
-
-            {/* Só aparece quando algum filtro está ativo. */}
-            {filtro !== 'todos' && (
-
-              <button
-                className="link"
-                type="button"
-                onClick={() => setFiltro('todos')}
-              >
-                Mostrar todos
-              </button>
-            )}
-          </p>
+        <div className="chips" role="group" aria-label="Filtrar pacotes">
+          {chips.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className={`chip-btn ${filtro === c.id ? 'is-active' : ''}`}
+              aria-pressed={filtro === c.id}
+              onClick={() => setFiltro(c.id)}
+            >
+              {c.rotulo}
+            </button>
+          ))}
         </div>
 
-
-        {/* Lista dos pacotes filtrados. */}
         <div className="offers">
+          {visiveis.map((p, i) => {
+            const ninho = p.tipo === 'ninho'
+            const n = viajantes[p.id] ?? 2
+            return (
+              <Reveal
+                as="article"
+                className="offer glow-card"
+                key={p.id}
+                delay={i * 90}
+                onPointerMove={seguirMouse}
+              >
+                <div className="offer-top">
+                  <span className="offer-badge">{p.selo}</span>
+                  <span className="mono offer-coord">{p.coord}</span>
+                </div>
 
-          {visiveis.map((p) => (
-
-            // Cada pacote é transformado em um <article>.
-            <article
-              className="offer"
-              key={p.id}
-
-              // Se o pacote for do tipo "ninho",
-              // recebe o ID "ninho" para permitir navegação por âncora.
-              id={p.tipo === 'ninho' ? 'ninho' : undefined}
-            >
-
-              {/* Imagem/cena do pacote. */}
-              <div className="offer-media">
-
-                {/* Componente Scene recebe o tipo da cena
-                    através da propriedade "tipo". */}
-                <Scene tipo={p.cena} />
-
-                {/* Selo do pacote. */}
-                <span className="offer-badge">
-                  {p.selo}
-                </span>
-              </div>
-
-
-              {/* Informações do pacote. */}
-              <div className="offer-body">
-
-                {/* Nome do pacote. */}
                 <h3>{p.nome}</h3>
+                <p className="offer-local">{p.local}</p>
+                <span className="chip">{p.duracao}</span>
+                <p className="offer-foco">{p.foco}</p>
 
-                {/* Localização. */}
-                <p className="offer-local">
-                  {p.local}
-                </p>
+                {!ninho && (
+                  <div className="meters" aria-label="Perfil da experiência">
+                    {Object.entries(p.nivel).map(([nome, v]) => (
+                      <div className="meter" key={nome}>
+                        <span>{nome}</span>
+                        <div className="meter-track">
+                          <i style={{ '--v': `${v}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
-                {/* Duração da viagem. */}
-                <span className="chip">
-                  {p.duracao}
-                </span>
-
-                {/* Principal objetivo/experiência do pacote. */}
-                <p className="offer-foco">
-                  {p.foco}
-                </p>
-
-
-                {/* ==================================================
-                    DETALHES DO PACOTE
-                    ================================================== */}
-
-                {/* <details> cria uma área expansível.
-                    O usuário pode clicar em "Ver detalhes". */}
                 <details className="offer-details">
-
                   <summary>Ver detalhes</summary>
-
-                  {/* Lista de atrações. */}
                   <ul>
                     {p.atracoes.map((a) => (
                       <li key={a}>{a}</li>
                     ))}
                   </ul>
-
-                  {/* Público recomendado. */}
                   <p>
                     <strong>Público:</strong> {p.publico}
                   </p>
-
-                  {/* Itens incluídos no pacote. */}
                   <p>
                     <strong>Inclui:</strong> {p.inclui.join(', ')}
                   </p>
                 </details>
 
-
-                {/* ==================================================
-                    PREÇO + BOTÃO
-                    ================================================== */}
-
                 <div className="offer-foot">
-
-                  {/* Área que apresenta os preços. */}
                   <div className="offer-price">
-
-                    {/* Texto muda dependendo se é pacote ou ninho. */}
-                    <span>
-                      {p.tipo === 'ninho'
-                        ? 'por ano, a partir de'
-                        : 'por pessoa, a partir de'}
-                    </span>
-
-
-                    {/* Preço mínimo formatado em reais. */}
-                    <strong>
-                      {reais(p.precoMin)}
-                    </strong>
-
-
-                    {/* Preço máximo. */}
-                    <small>
-                      até {reais(p.precoMax)}
-                    </small>
+                    <span>{ninho ? 'por ano, a partir de' : 'por pessoa, a partir de'}</span>
+                    <strong>{reais(p.precoMin)}</strong>
+                    <small>até {reais(p.precoMax)}</small>
                   </div>
 
+                  {ninho ? (
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => irPara('ninho')}
+                      type="button"
+                    >
+                      Personalizar
+                    </button>
+                  ) : (
+                    <div className="calc">
+                      <div className="stepper" role="group" aria-label="Número de viajantes">
+                        <button
+                          type="button"
+                          onClick={() => ajustarViajantes(p.id, -1)}
+                          aria-label="Menos um viajante"
+                        >
+                          −
+                        </button>
+                        <span aria-live="polite">{n}</span>
+                        <button
+                          type="button"
+                          onClick={() => ajustarViajantes(p.id, 1)}
+                          aria-label="Mais um viajante"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <div className="calc-total">
+                        <span>
+                          {n} {n === 1 ? 'viajante' : 'viajantes'} · estimativa
+                        </span>
+                        <strong>
+                          {reais(p.precoMin * n)} – {reais(p.precoMax * n)}
+                        </strong>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-                  {/* ==================================================
-                      BOTÃO DE AÇÃO
-                      ================================================== */}
-
+                {!ninho && (
                   <button
-                    className="btn btn-red"
-
-                    // Quando clicado, salva o pacote no estado
-                    // "reserva".
-                    onClick={() => setReserva(p)}
+                    className="btn btn-primary btn-block"
+                    type="button"
+                    onClick={() => setReserva({ pacote: p, viajantes: n })}
                   >
-
-                    {/* O texto do botão muda dependendo do tipo. */}
-                    {p.tipo === 'ninho'
-                      ? 'Adotar'
-                      : 'Reservar'}
+                    Reservar
                   </button>
+                )}
+              </Reveal>
+            )
+          })}
+        </div>
+
+        {filtro !== 'todos' && (
+          <button className="link" type="button" onClick={() => setFiltro('todos')}>
+            Mostrar todos os pacotes
+          </button>
+        )}
+      </section>
+
+      {/* ---------- radar / mapa ---------- */}
+      <section className="section" id="mapa">
+        <Reveal className="section-head">
+          <span className="eyebrow mono">02 / Mapa</span>
+          <h2>Radar do Pantanal</h2>
+          <p>Toque em um ponto para ver o destino. Posições ilustrativas.</p>
+        </Reveal>
+
+        <Reveal className="radar-layout">
+          <div className="radar" role="group" aria-label="Radar com os destinos">
+            <div className="radar-sweep" aria-hidden="true" />
+            <div className="radar-ring r1" aria-hidden="true" />
+            <div className="radar-ring r2" aria-hidden="true" />
+            <div className="radar-ring r3" aria-hidden="true" />
+            <div className="radar-cross" aria-hidden="true" />
+            <span className="mono radar-n" aria-hidden="true">
+              N
+            </span>
+
+            {pacotes
+              .filter((p) => p.mapa)
+              .map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={`pin ${pinoAtivo === p.id ? 'is-active' : ''}`}
+                  style={{ left: `${p.mapa.x}%`, top: `${p.mapa.y}%` }}
+                  onClick={() => setPinoAtivo(p.id)}
+                  aria-label={p.nome}
+                  aria-pressed={pinoAtivo === p.id}
+                >
+                  <i />
+                  <span className="mono">{p.id === 'perigara' ? 'MT' : 'MS'}</span>
+                </button>
+              ))}
+          </div>
+
+          <aside className="radar-info" aria-live="polite">
+            <span className="mono eyebrow">{pino.coord}</span>
+            <h3>{pino.nome}</h3>
+            <p className="offer-local">{pino.local}</p>
+            <p>{pino.foco}</p>
+            <ul className="radar-facts">
+              <li>
+                <span>Duração</span>
+                <strong>{pino.duracao}</strong>
+              </li>
+              <li>
+                <span>A partir de</span>
+                <strong>{reais(pino.precoMin)}</strong>
+              </li>
+            </ul>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                setFiltro(pino.id)
+                irPara('pacotes')
+              }}
+            >
+              Ver este pacote
+            </button>
+          </aside>
+        </Reveal>
+      </section>
+
+      {/* ---------- conheça a arara ---------- */}
+      <section className="section" id="arara">
+        <Reveal className="section-head">
+          <span className="eyebrow mono">03 / Conhecimento</span>
+          <h2>Conheça a arara-azul</h2>
+          <p>Por que ela merece ser vista de perto, e protegida.</p>
+        </Reveal>
+
+        <Reveal className="learn">
+          <div className="learn-tabs" role="tablist" aria-label="Sobre a arara-azul">
+            {abasArara.map((a) => (
+              <button
+                key={a.id}
+                role="tab"
+                type="button"
+                aria-selected={abaArara === a.id}
+                onClick={() => setAbaArara(a.id)}
+              >
+                {a.rotulo}
+              </button>
+            ))}
+          </div>
+          {abasArara
+            .filter((a) => a.id === abaArara)
+            .map((a) => (
+              <div className="learn-panel" key={a.id} role="tabpanel">
+                <h3>{a.titulo}</h3>
+                <p>{a.texto}</p>
+              </div>
+            ))}
+        </Reveal>
+      </section>
+
+      {/* ---------- adote um ninho ---------- */}
+      <section className="section" id="ninho">
+        <Reveal className="section-head">
+          <span className="eyebrow mono">04 / Apadrinhe</span>
+          <h2>Adote um ninho</h2>
+          <p>Escolha o valor, digite seu nome e veja seu certificado digital ganhar forma.</p>
+        </Reveal>
+
+        <Reveal className="adopt">
+          <div className="adopt-form glow-card" onPointerMove={seguirMouse}>
+            <label className="field">
+              Seu nome
+              <input
+                value={nomePadrinho}
+                onChange={(e) => setNomePadrinho(e.target.value)}
+                placeholder="Como aparecerá no certificado"
+                maxLength={32}
+                autoComplete="name"
+              />
+            </label>
+
+            <label className="field">
+              <span className="range-label">
+                Valor por ano <strong>{reais(valorNinho)}</strong>
+              </span>
+              <input
+                type="range"
+                min="300"
+                max="1000"
+                step="50"
+                value={valorNinho}
+                onChange={(e) => setValorNinho(Number(e.target.value))}
+                style={{ '--pct': `${((valorNinho - 300) / 700) * 100}%` }}
+              />
+              <span className="range-scale mono">
+                <span>R$ 300</span>
+                <span>R$ 1.000</span>
+              </span>
+            </label>
+
+            <p className="adopt-level">
+              Nível <strong>{nivelPadrinho}</strong>
+            </p>
+
+            <button
+              type="button"
+              className="btn btn-primary btn-block"
+              onClick={() =>
+                setReserva({ pacote: ninhoPacote, valor: valorNinho, nome: nomePadrinho })
+              }
+            >
+              Adotar este ninho
+            </button>
+          </div>
+
+          <div className="cert" aria-label="Pré-visualização do certificado">
+            <div className="cert-inner">
+              <span className="mono cert-top">CERTIFICADO DIGITAL</span>
+              <p className="cert-small">A EcoAzul certifica que</p>
+              <p className="cert-name">{nomePadrinho.trim() || 'Seu nome aqui'}</p>
+              <p className="cert-small">é {nivelPadrinho.toLowerCase()} de um ninho de arara-azul</p>
+              <div className="cert-row">
+                <div>
+                  <span className="mono">CÓDIGO</span>
+                  <strong className="mono">{codigoNinho(nomePadrinho)}</strong>
+                </div>
+                <div>
+                  <span className="mono">APOIO</span>
+                  <strong className="mono">{reais(valorNinho)}/ano</strong>
+                </div>
+                <div>
+                  <span className="mono">VALIDADE</span>
+                  <strong className="mono">1 ano</strong>
                 </div>
               </div>
-            </article>
-          ))}
-        </div>
+              <span className="cert-seal" aria-hidden="true">
+                ✦
+              </span>
+            </div>
+          </div>
+        </Reveal>
       </section>
 
+      {/* ---------- faq ---------- */}
+      <section className="section section-narrow" id="faq">
+        <Reveal className="section-head">
+          <span className="eyebrow mono">05 / Dúvidas</span>
+          <h2>Perguntas frequentes</h2>
+        </Reveal>
 
-      {/* ======================================================
-          DESTAQUE / SOBRE
-          ====================================================== */}
+        <Reveal className="faq">
+          {faq.map((f, i) => {
+            const aberta = faqAberta === i
+            return (
+              <div className={`faq-item ${aberta ? 'is-open' : ''}`} key={f.p}>
+                <button
+                  type="button"
+                  aria-expanded={aberta}
+                  onClick={() => setFaqAberta(aberta ? -1 : i)}
+                >
+                  {f.p}
+                  <span aria-hidden="true">+</span>
+                </button>
+                <div className="faq-body">
+                  <p>{f.r}</p>
+                </div>
+              </div>
+            )
+          })}
+        </Reveal>
+      </section>
 
+      {/* ---------- destaque ---------- */}
       <section className="spotlight" id="sobre">
-
-        <div className="spotlight-inner">
-
-          {/* Informação de destaque sobre as araras. */}
+        <Reveal className="spotlight-inner">
           <p className="spotlight-fact">
-            Cerca de 15% de todas as araras-azuis do mundo vivem na Fazenda
-            São Francisco do Perigara.
+            Cerca de 15% de todas as araras-azuis do mundo vivem na Fazenda São Francisco do
+            Perigara.
           </p>
-
-
-          {/* Texto explicando a proposta da EcoAzul. */}
           <p className="spotlight-text">
-            A EcoAzul leva você até elas, com guias especializados e acesso
-            a áreas preservadas, e também permite apadrinhar um ninho
-            monitorado, em parceria com centros de preservação como o
-            Instituto Arara Azul.
+            A EcoAzul leva você até elas, com guias especializados e acesso a áreas preservadas, e
+            também permite apadrinhar um ninho monitorado, em parceria com centros de preservação
+            como o Instituto Arara Azul.
           </p>
-
-
-          {/* Botão que leva para os pacotes. */}
-          <a href="#pacotes" className="btn btn-forest">
+          <a href="#pacotes" className="btn btn-primary">
             Escolher meu pacote
           </a>
-        </div>
+        </Reveal>
       </section>
 
-
-      {/* ======================================================
-          RODAPÉ
-          ====================================================== */}
-
-      <footer className="footer">
-
-        <div className="footer-cols">
-
-          {/* Informações principais da EcoAzul. */}
-          <div>
-
-            <img
-              src={logoEcoAzul}
-              alt="EcoAzul"
-              className="footer-logo"
-            />
-
-            <p>
-              Turismo de observação e conservação da arara-azul.
-            </p>
-          </div>
-
-
-          {/* Links relacionados aos pacotes. */}
-          <div>
-
-            <h4>Pacotes</h4>
-
-            <a href="#pacotes">
-              Pantanal Sul (MS)
-            </a>
-
-            <a href="#pacotes">
-              Fazenda Perigara (MT)
-            </a>
-          </div>
-
-
-          {/* Links relacionados ao programa de adoção. */}
-          <div>
-
-            <h4>Programa</h4>
-
-            <a href="#ninho">
-              Adote um ninho
-            </a>
-          </div>
-
-
-          {/* Informações sobre a EcoAzul. */}
-          <div>
-
-            <h4>EcoAzul</h4>
-
-            <a href="#sobre">
-              Sobre
-            </a>
-
-            <span>
-              Parceria: Instituto Arara Azul
-            </span>
-          </div>
-        </div>
-
-
-        {/* ==================================================
-            COPYRIGHT
-            ================================================== */}
-
-        {/* new Date().getFullYear() pega automaticamente
-            o ano atual do computador. */}
-        <p className="footer-legal">
-          © {new Date().getFullYear()} EcoAzul.
-          Projeto escolar; preços e pacotes ilustrativos.
-        </p>
-      </footer>
-
-
-      {/* ======================================================
-          MODAL DE RESERVA
-          ====================================================== */}
-
-      {/* O componente ReserveDialog recebe o pacote selecionado.
-          Se "reserva" for null, nenhum pacote está selecionado. */}
-
-      <ReserveDialog
-        pacote={reserva}
-
-        // Quando o modal for fechado,
-        // o estado volta para null.
-        onClose={() => setReserva(null)}
-      />
-
+      <ReserveDialog dados={reserva} onClose={() => setReserva(null)} />
     </main>
   )
 }
 
-
-// Exporta o componente Home para que ele possa ser
-// utilizado em outros arquivos da aplicação.
 export default Home

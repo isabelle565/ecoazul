@@ -1,0 +1,10 @@
+/* Estilos só desta página. Use sempre classes com o prefixo da página (.pagina-modelo ...)
+   e cores com var(--...) para funcionar nos temas claro e escuro. */
+.pagina-modelo .modelo-bloco {
+  padding: clamp(24px, 4vw, 44px);
+  border-radius: 22px;
+}
+.pagina-modelo .modelo-bloco p {
+  margin-top: 12px;
+  color: var(--muted);
+}
